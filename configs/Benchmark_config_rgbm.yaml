@@ -1,0 +1,187 @@
+# ============================================================
+#  Mirror-VLM Benchmark unified config
+# ============================================================
+
+experiment_name: "gpt-5.4_rgbm"   # Change this for each experiment to avoid overwrites.
+prompt_version: "v4"
+seed: 42
+
+paths:
+  qa_json: "Dataset/annotations/questions.json"
+  data_root: "."
+  output_dir: "Outputs/gpt-5.4_rgbm"
+
+  # ===== Switch 1: rgb_dir =====
+  # rgb_dir: "Dataset/images/rgb"                                  # unmarked
+  rgb_dir: "Dataset/images/mirror_marked_rgb"     # marked
+
+  # ===== Switch 2: depth_dir; active when use_depth=true =====
+  # depth_dir: "Dataset/images/depth"                            # unmarked
+  # depth_dir: "Dataset/images/mirror_marked_depth" # marked
+
+input:
+  use_depth: false          # ===== Switch 3: whether to send depth =====
+  use_mirror_marked: true  # ===== Switch 4: whether visual_bbox uses mirror-marked or original images =====
+
+  image_suffixes: [".jpg", ".jpeg", ".png"]
+  max_samples: null          # Use a small value for tests; use null for a full run.
+  allowed_question_types: null 
+  # allowed_question_types:
+  #   - yes_no
+  #   - single_choice
+  #   - multi_choice
+  #   - spatial_3d_axes
+  #   - count
+  #   - single_choice_plus_text
+
+  allowed_referring_styles: null
+  # allowed_referring_styles:
+  #   - bbox_text
+  #   - bbox_text_desc
+  #   - visual_bbox
+  #   - visual_bbox_desc
+  #   - visual_mask
+
+  allowed_template_ids: null 
+  # allowed_template_ids:
+    # - vc_001
+    # - vc_002
+    # - vc_003
+    # - mc_001
+    # - mc_002
+    # - mc_003
+    # - mr_001
+    # - mr_003
+    # - ct_001
+    # - ac_001
+    # - ac_002
+    # - ac_003
+    # - ac_004
+    # - mpac_001
+
+  include_categories: null 
+  # include_categories:
+  #   - perception
+  #   - reasoning
+  #   - action
+
+  exclude_categories: null
+
+prompt:
+  system_prompt: |
+    You are evaluating a visual reasoning benchmark about mirror scenes.
+    Answer strictly using the required JSON schema.
+    Do not output markdown.
+    Do not output any extra text outside the JSON object.
+
+  task_instruction: |
+    Use the provided image(s) to answer the question.
+    The final answer must be based on what you can observe in the image(s).
+
+  task_background: |
+    Task background:
+    - Some objects are seen directly in the real world.
+    - Some objects are seen only through a mirror reflection.
+    - A mirror instance and a real-world instance may refer to the same physical object.
+    - All spatial descriptions use the ego-centered coordinate system of the input image.
+    - "Left" and "right" refer to the image/observer's left and right.
+    - "Front" and "behind" refer to depth relative to the observer in the current image view.
+    - Unless explicitly stated otherwise, answer from the viewpoint of the current image.
+    - Use only the provided visual evidence.
+
+  # ===== Switch 5: mirror_hint =====
+  # Use an empty string for unmarked experiments; uncomment the matching block for marked experiments.
+  # mirror_hint: ""
+  mirror_hint: |                          # RGB marked
+    The semi-transparent green overlay on the image indicates reflective surface regions,
+    which may include mirrors, glass, lake surfaces, or convex mirrors.
+  # mirror_hint: |                          # RGB+D both marked
+  #   The semi-transparent green overlay on the RGB image indicates reflective surface regions,
+  #   which may include mirrors, glass, lake surfaces, or convex mirrors.
+  #   The semi-transparent white overlay on the depth map marks the same reflective regions.
+  depth_hint: |
+    You are provided with two images: the first is an RGB image,
+    and the second is a depth map using jet colormap
+    (blue = near/close to camera, red = far from camera).
+    Use the depth map to reason about relative distances and spatial positions of objects.
+  ask_for_brief_explanation: true
+  explanation_max_words: 100
+
+model:
+  # provider: "qwen_openai_compatible"
+  # model_name: "Qwen/Qwen3.5-9B"
+  # api_base: "http://localhost:8000/v1"
+  # api_key_env: "OPENAI_API_KEY"
+  # temperature: 0.0
+  # max_tokens: 2048
+  # timeout_sec: 120
+
+  # ----- Qwen2.5-VL-7B (local vLLM) -----
+  # provider: "qwen_openai_compatible"
+  # model_name: "Qwen/Qwen2.5-VL-7B-Instruct"
+  # api_base: "http://localhost:8000/v1"
+  # api_key_env: "OPENAI_API_KEY"
+  # temperature: 0.0
+  # max_tokens: 2048
+  # timeout_sec: 120
+ 
+  # ----- InternVL3-8B (local vLLM) -----
+  # provider: "qwen_openai_compatible"
+  # model_name: "OpenGVLab/InternVL3-8B"
+  # api_base: "http://localhost:8000/v1"
+  # api_key_env: "OPENAI_API_KEY"
+  # temperature: 0.0
+  # max_tokens: 2048
+  # timeout_sec: 120
+ 
+  # ----- LLaVA-OneVision-7B (local vLLM) -----
+  # provider: "qwen_openai_compatible"
+  # model_name: "lmms-lab/llava-onevision-qwen2-7b-ov"
+  # api_base: "http://localhost:8000/v1"
+  # api_key_env: "OPENAI_API_KEY"
+  # temperature: 0.0
+  # max_tokens: 2048
+  # timeout_sec: 120
+ 
+  # ----- Llama-3.2-Vision-11B (local vLLM) -----
+  # provider: "qwen_openai_compatible"
+  # model_name: "meta-llama/Llama-3.2-11B-Vision-Instruct"
+  # api_base: "http://localhost:8000/v1"
+  # api_key_env: "OPENAI_API_KEY"
+  # temperature: 0.0
+  # max_tokens: 2048
+  # timeout_sec: 120
+ 
+  # ----- GPT-4o (OpenAI API) -----
+  # provider: "openai"
+  # model_name: "gpt-4o"
+  # api_key_env: "OPENAI_API_KEY"
+  # temperature: 0.0
+  # max_tokens: 2048
+  # timeout_sec: 120
+ 
+  # ----- GPT-5 (OpenAI API) -----
+  provider: "openai"
+  model_name: "gpt-5.4"
+  api_key_env: "OPENAI_API_KEY"
+  temperature: 0.0
+  max_tokens: 2048
+  max_completion_tokens: 2048
+  use_max_completion_tokens: true
+  timeout_sec: 120
+ 
+  # ----- Gemini 2.5 Pro (Google API) -----
+  # provider: "google"
+  # model_name: "gemini-2.5-pro"
+  # api_key_env: "GOOGLE_API_KEY"
+  # temperature: 0.0
+  # max_tokens: 2048
+  # timeout_sec: 120
+runtime:
+  save_raw_response: true
+  retry_times: 2
+  sleep_between_retries_sec: 1
+  checkpoint_every_n: 10
+  write_checkpoint_reports: true
+  resume_from_checkpoint: true
+  resume_success_only: true
